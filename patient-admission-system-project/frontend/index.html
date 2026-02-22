@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Admission System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --bg: #f0fdfa;
+            --surface: #ffffff;
+            --text: #334155;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --success: #22c55e;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { background-color: var(--bg); color: var(--text); padding: 2rem; }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        }
+
+        .card.danger-border { border-top: 4px solid var(--danger); }
+        .card.full-width { grid-column: span 2; }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        .form-group input {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border);
+            border-radius: 6px; font-size: 1rem;
+        }
+
+        .split-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        button {
+            background: var(--primary); color: white; border: none;
+            padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600;
+            cursor: pointer; width: 100%; transition: background 0.2s;
+        }
+        button:hover { background: var(--primary-dark); }
+        button.danger { background: var(--danger); }
+        button.danger:hover { background: #b91c1c; }
+        button.small { width: auto; padding: 0.5rem 1rem; font-size: 0.8rem; }
+
+        .patient-list { list-style: none; margin-top: 1rem; }
+        .patient-card {
+            background: #f8fafc; border: 1px solid var(--border);
+            padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem; border-radius: 999px;
+            font-size: 0.75rem; font-weight: 700; display: inline-block;
+        }
+        .badge.NORMAL { background: #dcfce7; color: #166534; }
+        .badge.OBSERVATION { background: #fef08a; color: #854d0e; }
+        .badge.CRITICAL { background: #fee2e2; color: #991b1b; }
+
+        .vitals { font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; }
+
+        .search-bar { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        .search-bar input { flex: 1; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; }
+        .search-bar button { width: auto; }
+
+        .patient-details-content {
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+
+        #toast {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--text); color: white; padding: 1rem;
+            border-radius: 8px; display: none; z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            body { 
+                padding: 1rem; 
+            }
+            
+            header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 1rem; 
+                padding: 1rem; 
+            }
+
+            .dashboard-grid { 
+                grid-template-columns: 1fr; 
+                gap: 1rem; 
+            }
+
+            .card.full-width { 
+                grid-column: span 1; 
+            }
+
+            .split-group { 
+                grid-template-columns: 1fr; 
+                gap: 0; 
+            }
+
+            .search-bar { 
+                flex-direction: column; 
+            }
+            
+            .search-bar button { 
+                width: 100%; 
+            }
+
+            .patient-details-content { 
+                flex-direction: column; 
+                gap: 1.5rem; 
+            }
+            
+            .patient-details-content button { 
+                width: 100%; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>🩺 Patient Admission System</h1>
+            <p>Central Admission & Vitals Monitoring</p>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        
+        <div class="card">
+            <h2>New Patient Admission</h2>
+            <form id="admissionForm">
+                <div class="form-group">
+                    <label>Patient Name</label>
+                    <input type="text" id="name" required placeholder="e.g. Jane Doe">
+                </div>
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" id="age" required min="0" max="150" placeholder="e.g. 45">
+                </div>
+                <div class="split-group">
+                    <div class="form-group">
+                        <label>Systolic BP</label>
+                        <input type="number" id="sys" required placeholder="120">
+                    </div>
+                    <div class="form-group">
+                        <label>Diastolic BP</label>
+                        <input type="number" id="dia" required placeholder="80">
+                    </div>
+                </div>
+                <button type="submit">Admit Patient</button>
+            </form>
+        </div>
+
+        <div class="card danger-border">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>🚨 ICU / Critical Monitor</h2>
+                <button onclick="fetchCritical()" class="small">Refresh</button>
+            </div>
+            <ul id="criticalList" class="patient-list">
+                <p style="color: #64748b; font-size: 0.9rem;">No critical patients currently monitored.</p>
+            </ul>
+        </div>
+
+        <div class="card full-width">
+            <h2>Patient Lookup & Management</h2>
+            <div class="search-bar">
+                <input type="number" id="searchId" placeholder="Enter Patient ID">
+                <button onclick="lookupPatient()">Search Record</button>
+            </div>
+            
+            <div id="patientDetails" style="display: none; background: var(--bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--primary);">
+                <div class="patient-details-content">
+                    <div>
+                        <h3 id="detName">Name</h3>
+                        <p class="vitals">ID: <span id="detId"></span> | Age: <span id="detAge"></span></p>
+                        <p class="vitals">BP: <strong id="detBp"></strong></p>
+                        <span id="detStatus" class="badge" style="margin-top: 0.5rem;"></span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                        <button onclick="dischargePatient()" class="danger">Discharge</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toast">Message here</div>
+
+    <script>
+        function getBackendDomain() {
+            return "http://localhost:8080";
+        }
+        const API_BASE = getBackendDomain() + '/api';
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        document.getElementById('admissionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('name').value,
+                age: parseInt(document.getElementById('age').value, 10),
+                systolicBp: parseInt(document.getElementById('sys').value, 10),
+                diastolicBp: parseInt(document.getElementById('dia').value, 10)
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/admit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (res.ok) {
+                    const patient = await res.json();
+                    showToast(`Success! ${patient.name} admitted with ID: ${patient.id}`);
+                    document.getElementById('admissionForm').reset();
+                    fetchCritical(); 
+                } else {
+                    showToast('Validation Failed. Check input ranges.');
+                }
+            } catch (err) {
+                showToast('Connection error. Is backend running?');
+            }
+        });
+
+        async function fetchCritical() {
+            try {
+                const res = await fetch(`${API_BASE}/critical`);
+                if (!res.ok) return;
+                const patients = await res.json();
+                
+                const list = document.getElementById('criticalList');
+                list.innerHTML = '';
+                
+                if (patients.length === 0) {
+                    list.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">No critical patients currently monitored.</p>';
+                    return;
+                }
+
+                patients.forEach(p => {
+                    list.innerHTML += `
+                        <li class="patient-card">
+                            <div>
+                                <strong>#${p.id} - ${p.name}</strong>
+                                <p class="vitals">BP: ${p.systolicBp}/${p.diastolicBp}</p>
+                            </div>
+                            <span class="badge ${p.status}">${p.status}</span>
+                        </li>
+                    `;
+                });
+            } catch (err) {
+                console.error('Failed to fetch critical list');
+            }
+        }
+
+        let currentPatientId = null;
+        async function lookupPatient() {
+            const id = document.getElementById('searchId').value;
+            if(!id) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/${id}`);
+                if (res.ok) {
+                    const p = await res.json();
+                    currentPatientId = p.id;
+                    
+                    document.getElementById('patientDetails').style.display = 'block';
+                    document.getElementById('detName').innerText = p.name;
+                    document.getElementById('detId').innerText = p.id;
+                    document.getElementById('detAge').innerText = p.age;
+                    document.getElementById('detBp').innerText = `${p.systolicBp}/${p.diastolicBp}`;
+                    
+                    const statusBadge = document.getElementById('detStatus');
+                    statusBadge.innerText = p.status;
+                    statusBadge.className = `badge ${p.status}`;
+                } else {
+                    showToast('Patient record not found.');
+                    document.getElementById('patientDetails').style.display = 'none';
+                }
+            } catch (err) {
+                showToast('Error fetching patient.');
+            }
+        }
+
+        async function dischargePatient() {
+            if (!currentPatientId) return;
+            if (!confirm('Are you sure you want to discharge and delete this record?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/${currentPatientId}/discharge`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Patient successfully discharged.');
+                    document.getElementById('patientDetails').style.display = 'none';
+                    document.getElementById('searchId').value = '';
+                    fetchCritical();
+                }
+            } catch (err) {
+                showToast('Failed to discharge patient.');
+            }
+        }
+
+        fetchCritical();
+    </script>
+</body>
+</html>
+
+
