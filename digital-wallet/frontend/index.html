@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Weekend | CryptoWallet Core</title>
+    <style>
+        :root {
+            --bg-dark: #0f0c29;
+            --bg-gradient: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --accent: #00d2ff; /* Cyan Neon */
+            --accent-glow: 0 0 10px #00d2ff;
+            --success: #00ff87;
+            --danger: #ff4b2b;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: var(--accent-glow);
+        }
+
+        p.subtitle {
+            color: var(--accent);
+            font-family: var(--font-mono);
+            margin-top: 10px;
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 350px 1fr; /* Sidebar + Main Content */
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        /* FORM SECTION (GLASS PANEL) */
+        .glass-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            height: fit-content;
+        }
+
+        h2 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0; }
+
+        label { display: block; margin: 15px 0 5px; color: var(--text-muted); font-size: 0.9rem; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--accent-glow);
+        }
+
+        button.primary {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.2s;
+        }
+
+        button.primary:hover { transform: translateY(-2px); box-shadow: var(--accent-glow); }
+
+        /* WALLET GRID */
+        .wallet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Auto-responsive cards */
+            gap: 20px;
+        }
+
+        /* WALLET CARD */
+        .wallet-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .wallet-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .user-info h3 { margin: 0; color: white; word-wrap: break-word; }
+        .user-info span { color: var(--text-muted); font-size: 0.85rem; word-wrap: break-word; }
+
+        .wallet-address {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin: 15px 0;
+            text-align: center;
+            letter-spacing: 1px;
+            word-break: break-all; /* Ensures long addresses don't break layout */
+        }
+
+        .balance-area {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .balance-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+        .balance-amount { font-size: 2rem; color: var(--success); font-weight: bold; }
+
+        /* ACTIONS IN CARD */
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .card-actions input { width: 70%; padding: 8px; margin-bottom: 0; }
+        
+        button.add-btn {
+            width: 30%;
+            background: var(--success);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button.delete-btn {
+            width: 100%;
+            margin-top: 10px;
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button.delete-btn:hover { background: var(--danger); color: white; }
+
+        /* Console Log */
+        #system-log {
+            margin-top: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        @media (max-width: 850px) {
+            /* 1. Stack the layout (Form on top, Wallets below) */
+            .container {
+                grid-template-columns: 1fr;
+                width: 95%;
+            }
+
+            /* 2. Adjust Header Size */
+            header { padding: 20px 10px; }
+            h1 { font-size: 1.8rem; }
+            p.subtitle { font-size: 0.8rem; }
+
+            /* 3. Make the Form Panel wider but constrained */
+            .glass-panel {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* 4. Small Mobile Adjustments */
+            h1 { font-size: 1.5rem; }
+            
+            .wallet-grid {
+                grid-template-columns: 1fr; /* Single column cards */
+            }
+
+            .balance-amount { font-size: 1.5rem; }
+            
+            button, input { font-size: 16px; /* Prevents zoom on iOS */ }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Digital Wallet Initializer</h1>
+        <p class="subtitle">SECURE BACKEND &bull; ONE-TO-ONE MAPPING</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="glass-panel">
+            <h2>New Identity</h2>
+            <form id="registerForm">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="e.g. Satoshi_N" required>
+                
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="e.g. satoshi@bitcoin.org" required>
+
+                <button type="submit" class="primary">Initialize Wallet</button>
+            </form>
+            <div id="system-log">> System Ready...</div>
+        </div>
+
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Active Wallets</h2>
+                <button onclick="fetchWallets()" style="background:none; border:1px solid var(--accent); color:var(--accent); padding:5px 15px; border-radius:20px; cursor:pointer;">↻ Refresh</button>
+            </div>
+            
+            <div id="walletGrid" class="wallet-grid">
+                </div>
+        </div>
+
+    </div>
+
+    <script>
+        function getBackendDomain() {
+            return "http://localhost:8080";
+        }
+        
+        const API_BASE = getBackendDomain() + "/api";
+        const logDiv = document.getElementById('system-log');
+
+        function log(msg, isError = false) {
+            logDiv.innerText = "> " + msg;
+            logDiv.style.color = isError ? '#ff4b2b' : '#00d2ff';
+        }
+
+        // 1. REGISTER USER
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    log(`Success! Wallet ${data.wallet.walletAddress} generated.`);
+                    fetchWallets();
+                    e.target.reset();
+                } else {
+                    const errorText = await res.text();
+                    log("Error: " + errorText, true);
+                }
+            } catch (err) {
+                log("Backend unreachable.", true);
+            }
+        });
+
+        // 2. FETCH ALL WALLETS
+        async function fetchWallets() {
+            try {
+                const res = await fetch(`${API_BASE}/users`);
+                const users = await res.json();
+                
+                const grid = document.getElementById('walletGrid');
+                grid.innerHTML = ''; // Clear
+
+                if(users.length === 0) {
+                    grid.innerHTML = '<p style="color:gray; text-align:center;">No active wallets found.</p>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'wallet-card';
+                    card.innerHTML = `
+                        <div class="user-info">
+                            <h3>${user.username}</h3>
+                            <span>${user.email}</span>
+                        </div>
+                        
+                        <div class="wallet-address">${user.wallet.walletAddress}</div>
+                        
+                        <div class="balance-area">
+                            <div class="balance-label">Current Balance</div>
+                            <div class="balance-amount">$${user.wallet.balance.toFixed(2)}</div>
+                        </div>
+
+                        <div class="card-actions">
+                            <input type="number" id="amount-${user.id}" placeholder="0.00">
+                            <button class="add-btn" onclick="addFunds(${user.id})">+</button>
+                        </div>
+                        
+                        <button class="delete-btn" onclick="deleteUser(${user.id})">Terminate Account</button>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (err) {
+                console.error(err);
+                log("Failed to load wallets", true);
+            }
+        }
+
+        // 3. ADD FUNDS
+        async function addFunds(userId) {
+            const amountInput = document.getElementById(`amount-${userId}`);
+            const amount = amountInput.value;
+
+            if(!amount || amount <= 0) {
+                alert("Please enter a valid amount");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/add-money/${userId}?amount=${amount}`, {
+                    method: 'PUT'
+                });
+
+                if(res.ok) {
+                    log(`Funds added to User ID ${userId}`);
+                    fetchWallets(); // Refresh UI
+                } else {
+                    alert("Transaction Failed");
+                }
+            } catch (err) {
+                alert("Error connecting to server");
+            }
+        }
+
+        // 4. DELETE USER
+        async function deleteUser(userId) {
+            if(!confirm("Are you sure? This will destroy the wallet forever.")) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/delete/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if(res.ok) {
+                    log(`User ID ${userId} deleted.`);
+                    fetchWallets();
+                }
+            } catch (err) {
+                log("Delete failed.", true);
+            }
+        }
+
+        // Initial Load
+        fetchWallets();
+
+    </script>
+</body>
+</html>
+
+
